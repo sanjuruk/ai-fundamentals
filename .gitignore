@@ -1,0 +1,83 @@
+.DS_Store
+__pycache__/
+.venv/
+venv/
+node_modules/
+.env
+.env.*
+
+# Local agent/tool state
+.gstack/
+.codex/
+.claude/
+.vercel/
+*/.gstack/
+*/.codex/
+*/.claude/
+*/.vercel/
+
+# Private local tracking, scratch notes, exports, and machine-specific state
+_local/
+.local/
+*/_local/
+*/.local/
+
+# Package manager lockfiles this repo does not use
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Local experiment outputs
+outputs/
+runs/
+*.log
+*.tmp
+*.bak
+
+# Frontend/build outputs
+dist/
+build/
+.vite/
+coverage/
+
+# Keep model weights intentional.
+models/**/*.bin
+models/**/*.safetensors
+models/**/*.gguf
+models/**/*.pt
+models/**/*.pth
+
+# Downloaded papers and research corpora are reproducible from the indexes.
+papers/**/*.pdf
+data/**/*.parquet
+data/**/*.jsonl
+data/**/*.jsonl.gz
+data/**/*.arrow
+data/**/*.sqlite
+data/**/*.db
+
+# Raw GitHub HTML snapshots can contain public-page CSRF fields.
+resources/raw/github-*.html
+
+# Avoid committing cloned upstream repositories into this study repo.
+repos/*
+!repos/README.md
+
+# Large downloaded artifacts and caches.
+*.ckpt
+*.onnx
+*.h5
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.zst
+*.gz
+*.bz2
+.cache/
+wandb/
+mlruns/
+
+# Generated app assets. Rebuilt by `bun run generate:assets`.
+app/public/ai-fundamentals-study-card.png
+app/public/phase-cards/

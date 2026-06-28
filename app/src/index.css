@@ -1,0 +1,99 @@
+:root {
+  color-scheme: light;
+  --paper: #f7f9fb;
+  --surface: #ffffff;
+  --ink: #181b22;
+  --muted: #647077;
+  --line: #dce4ea;
+  --line-soft: #edf2f5;
+  --grid-line: rgba(24, 27, 34, 0.035);
+  --cyan: #14abbd;
+  --cyan-dark: #0f6674;
+  --cyan-soft: #e1f5f6;
+  --green: #2e9366;
+  --amber: #ce8a21;
+  --amber-soft: #fff3d6;
+  --amber-ink: #754c0d;
+  --primary: #181b22;
+  --primary-fg: #ffffff;
+  --row-bg: rgba(255, 255, 255, 0.68);
+  --locked-bg: rgba(246, 248, 250, 0.72);
+  --quest-bg: #181b22;
+  --quest-fg: #ffffff;
+  --quest-muted: rgba(255, 255, 255, 0.72);
+  --quest-row-bg: rgba(255, 255, 255, 0.06);
+  --quest-row-border: rgba(255, 255, 255, 0.14);
+  --quest-progress-bg: rgba(255, 255, 255, 0.14);
+  --radius: 8px;
+  --shadow: 0 16px 36px rgba(24, 27, 34, 0.07);
+  --sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: "Space Grotesk", "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", "Roboto Mono", "Cascadia Code", ui-monospace, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--paper);
+  background-size: 32px 32px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #10141b;
+  --surface: #171d26;
+  --ink: #f4f7fb;
+  --muted: #a8b3bd;
+  --line: #2c3745;
+  --line-soft: #222b36;
+  --grid-line: rgba(244, 247, 251, 0.055);
+  --cyan: #38c7d7;
+  --cyan-dark: #82e0e9;
+  --cyan-soft: rgba(56, 199, 215, 0.14);
+  --green: #61d29a;
+  --amber: #f1b95f;
+  --amber-soft: rgba(241, 185, 95, 0.16);
+  --amber-ink: #ffdca2;
+  --primary: #eef4f8;
+  --primary-fg: #10141b;
+  --row-bg: rgba(255, 255, 255, 0.045);
+  --locked-bg: rgba(255, 255, 255, 0.035);
+  --quest-bg: #071015;
+  --quest-fg: #f4f7fb;
+  --quest-muted: rgba(244, 247, 251, 0.7);
+  --quest-row-bg: rgba(255, 255, 255, 0.055);
+  --quest-row-border: rgba(255, 255, 255, 0.12);
+  --quest-progress-bg: rgba(255, 255, 255, 0.12);
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--paper);
+}
+
+button,
+input,
+summary {
+  font: inherit;
+}
+
+button,
+a,
+label,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+p {
+  line-height: 1.48;
+}

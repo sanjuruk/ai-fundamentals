@@ -1,0 +1,1 @@
+{"parquet_files":[{"dataset":"allenai/TMax-SFT-16.5K","config":"default","split":"train","url":"https://huggingface.co/datasets/allenai/TMax-SFT-16.5K/resolve/refs%2Fconvert%2Fparquet/default/train/0000.parquet","filename":"0000.parquet","size":9235491}],"pending":[],"failed":[],"partial":false}

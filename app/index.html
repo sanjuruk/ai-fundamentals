@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Nunito+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A local-first AI fundamentals study tracker with phases, daily quests, milestones, and online source links."
+    />
+    <script>
+      (() => {
+        try {
+          const key = 'ai-fundamentals-theme-v1'
+          const saved = window.localStorage.getItem(key)
+          const theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.dataset.theme = theme
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+    <meta property="og:title" content="AI Fundamentals Study Tracker" />
+    <meta
+      property="og:description"
+      content="Short sessions, visible progress, and every paper, video, repo, and dataset one click away."
+    />
+    <meta property="og:image" content="%BASE_URL%ai-fundamentals-study-card.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI Fundamentals Study Tracker" />
+    <meta
+      name="twitter:description"
+      content="Short sessions, visible progress, and every paper, video, repo, and dataset one click away."
+    />
+    <meta name="twitter:image" content="%BASE_URL%ai-fundamentals-study-card.png" />
+    <title>AI Fundamentals Study Tracker</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

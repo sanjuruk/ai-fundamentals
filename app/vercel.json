@@ -1,0 +1,23 @@
+{
+  "buildCommand": "bun run build:subpath",
+  "devCommand": "bun run dev -- --host 127.0.0.1",
+  "outputDirectory": "dist",
+  "installCommand": "bun install --frozen-lockfile",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/ai-fundamentals",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/ai-fundamentals",
+      "destination": "/"
+    },
+    {
+      "source": "/ai-fundamentals/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}

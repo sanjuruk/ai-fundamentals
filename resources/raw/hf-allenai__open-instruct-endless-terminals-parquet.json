@@ -1,0 +1,1 @@
+{"parquet_files":[{"dataset":"allenai/open-instruct-endless-terminals","config":"default","split":"train","url":"https://huggingface.co/datasets/allenai/open-instruct-endless-terminals/resolve/refs%2Fconvert%2Fparquet/default/train/0000.parquet","filename":"0000.parquet","size":3732958}],"pending":[],"failed":[],"partial":false}

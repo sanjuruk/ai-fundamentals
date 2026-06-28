@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TMax: A Simple Recipe for Terminal Agents &middot; WAI</title>
+  <meta name="description" content="TMax is the strongest open RL recipe for terminal agents to date, bringing open data recipes closer to the frontier: a 14,600-environment dataset and a simple outcome-only RL recipe, with open models from 2B to 27B.">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=1782105008">
+  <link rel="stylesheet" href="/assets/css/site.css?v=1782105008"><link type="application/atom+xml" rel="alternate" href="https://wai-org.com/feed.xml" title="WAI" />
+</head>
+<body><nav class="site-nav">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="/">WAI</a>
+    <div class="site-nav__links">
+      <a href="/blog/">Blog</a>
+      <a href="/about/">About</a>
+    </div>
+  </div>
+</nav>
+
+
+
+<nav id="TOC" role="doc-toc">
+  <label for="toc-toggle" class="margin-toggle">Contents</label>
+  <input type="checkbox" id="toc-toggle" class="margin-toggle">
+</nav>
+
+<main>
+  <div class="post-hero">
+<h1 class="title">
+<img class="title-logo" src="/assets/img/tmax/logo.png" alt="TMax mascot logo">
+TMax: A Simple Recipe for Terminal Agents
+</h1>
+<div class="byline">
+<p><strong>Hamish Ivison</strong>*, <strong>Junjie Oscar
+Yin</strong>*,<br> Rulin Shao, Teng Xiao, Nathan Lambert, Hannaneh
+Hajishirzi<span
+class="sidenote-wrapper"><label for="sn-0" class="margin-toggle">&#8853;</label><input type="checkbox" id="sn-0" class="margin-toggle"/><span
+class="marginnote">*Co-first authors. Work done while HI and NL were at
+Ai2.<br />
+<br />
+</span></span></p>
+</div>
+<div class="affiliations">
+<p>Allen Institute for AI · University of Washington</p>
+</div>
+<div class="post-date">
+<p>June 16, 2026</p>
+</div>
+</div>
+<figure>
+<img src="/assets/img/tmax/teaser.png"
+alt="Terminal Bench 2.0 vs. model size. TMax dominates the Pareto frontier for models under 32B: TMax-9B is the strongest open model under 10B we compare against, and TMax-27B is competitive with open-weight models an order of magnitude larger." />
+<figcaption aria-hidden="true">Terminal Bench 2.0 vs. model size. TMax
+dominates the Pareto frontier for models under 32B: TMax-9B is the
+strongest open model under 10B we compare against, and TMax-27B is
+competitive with open-weight models an order of magnitude
+larger.</figcaption>
+</figure>
+<div class="tldr">
+<p><span class="tldr-label">TL;DR</span></p>
+<p><strong>TMax</strong> is the strongest open RL recipe for terminal
+agents to date, bringing open data recipes closer to the frontier. We
+release two things. The first is <strong>TMax-15k</strong>, a dataset of
+<strong>14,600 RL environments</strong> built from a compositional
+pipeline with explicit control over difficulty and diversity. It is over
+<strong>2.5× larger</strong> than the next-largest open terminal dataset
+that releases full environment data. The second is a <strong>simple,
+outcome-only RL recipe</strong> (GRPO plus a few stability fixes), which
+we use to train a family of open models from <strong>2B to
+27B</strong>.</p>
+<p><a href="https://huggingface.co/allenai/tmax-9b"
+class="dataset-tag">TMax-9B</a> reaches <strong>27.2%</strong> on <a
+href="https://www.tbench.ai/leaderboard/terminal-bench/2.0">Terminal
+Bench 2.0</a>. Under official Terminal Bench settings this is the
+strongest open-weights model under 10B we are aware of: it beats 32B
+terminal agents from prior work and approaches closed models like Claude
+Haiku 4.5 (29.8%). Scaling the same recipe up, <a
+href="https://huggingface.co/allenai/tmax-27b"
+class="dataset-tag">TMax-27B</a> improves to <strong>42.7%</strong>,
+approaching models 10 to 40× its size like the 1T-parameter Kimi K2.5
+(43.2%).</p>
+<p><strong>Resources:</strong> <a
+href="https://github.com/hamishivi/tmax/blob/master/assets/paper.pdf">📄
+Paper</a> · <a href="https://github.com/hamishivi/tmax">👨‍💻 GitHub</a> ·
+<a href="https://huggingface.co/collections/allenai/tmax">🤗 HF
+Models</a> · <a
+href="https://huggingface.co/collections/allenai/tmax">🤗 HF Dataset</a>
+· 🐦 Tweet</p>
+</div>
+<h2 id="terminal-agents-and-why-theyre-hard-to-train">1. Terminal
+agents, and why they’re hard to train</h2>
+<p>Terminal-using agents have quickly become the most popular way people
+put language models to work. A <em>terminal agent</em> is a language
+model that interacts with a terminal environment: by issuing commands in
+a shell, calling tools, reading the output, and iterating. It might
+resolve a failing build, profile a slow service, recover a corrupted
+archive, or wire up a multi-service stack. The model plans, runs a
+command, looks at <code>stdout</code>/<code>stderr</code>, and tries
+again. This is now the dominant interface for agentic coding
+products,<span
+class="sidenote-wrapper"><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"/><span
+class="sidenote">For example, Anthropic’s Claude Code and other
+terminal-native coding products.<br />
+<br />
+</span></span> and the tasks these agents are asked to solve keep
+getting more complex and long-horizon.</p>
+<p>Despite this popularity, there is surprisingly little <em>open</em>
+academic work on training terminal agents with RL. We think this comes
+down to three gaps:</p>
+<ul>
+<li><strong>Hard benchmarks.</strong> Evaluations like <a
+href="https://www.tbench.ai/">Terminal Bench</a><span
+class="sidenote-wrapper"><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle"/><span
+class="sidenote">Merrill et al., “Terminal Bench,” 2026.<br />
+<br />
+</span></span> capture genuinely long-horizon, multi-step terminal work,
+but they are hard, and much prior work sidesteps them in favor of
+simpler bug-fixing or natural-language-to-bash setups.</li>
+<li><strong>A lack of data.</strong> Real-world terminal traces are
+scarce or proprietary, and the synthetic datasets that do exist tend to
+be small, narrow (mostly file manipulation or one dominant domain), or
+never release their actual RL environments.</li>
+<li><strong>A lack of a simple baseline recipe.</strong> Most
+data-generation papers stop at supervised fine-tuning; the ones that try
+RL often report ~1-point gains, leaving little signal for the community
+to build on.</li>
+</ul>
+<p>TMax closes the data and recipe gaps. We provide a large,
+difficulty-controlled dataset of complex terminal tasks and a simple RL
+recipe that produces large, reliable improvements of over <strong>5
+points</strong> on Terminal Bench, with gains that transfer across tasks
+and harnesses. Our contributions are:</p>
+<ol type="1">
+<li><strong>TMax-15k</strong>, a dataset of 14,600 RL environments, over
+2.5× larger than prior open terminal datasets and notably harder.</li>
+<li><strong>Open-weights terminal agents at 2B/4B/9B/27B</strong> scale,
+trained on this data. Our best 9B model reaches 27.2% on Terminal Bench
+2.0, the strongest open model under 10B we are aware of under official
+settings.</li>
+<li><strong>A simple, reproducible RL recipe</strong>, with all
+components released for training the models.</li>
+<li><strong>Evidence that terminal RL generalizes</strong> across
+harnesses and across tasks, suggesting the model learns real new skills
+rather than overfitting a single setup.</li>
+</ol>
+<h2 id="generating-terminal-environments-at-scale">2. Generating
+terminal environments at scale</h2>
+<p>Training a terminal agent with RL needs a lot of executable
+environments: each task has to ship with the files, dependencies, and an
+automated check that verifies whether the agent succeeded. Existing
+pipelines tend to fall short in three ways. They lean on
+<strong>complex, multi-stage generation</strong> that is hard to scale;
+they produce <strong>homogeneous</strong> task suites dominated by one
+or two domains; and they offer <strong>little control over
+difficulty</strong>, yielding tasks that are either trivially solved or
+entirely out of reach.</p>
+<p>We propose a simple terminal environment generation pipeline that is
+scalable, diverse, and difficulty-aware. We use <a
+href="https://deepmind.google/technologies/gemini/">Gemini-3-Pro</a> as
+the generator,<span
+class="sidenote-wrapper"><label for="sn-3" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-3" class="margin-toggle"/><span
+class="sidenote">We chose Gemini-3-Pro for its strong performance on
+Terminal Bench.<br />
+<br />
+</span></span> and the core idea is simple: <strong>compose each task by
+hierarchically sampling from a set of structured axes.</strong></p>
+<figure>
+<img src="/assets/img/tmax/data-pipeline.png"
+alt="The TMax data pipeline. Each task is composed by hierarchically sampling across 9 structured axes, after which the generator instantiates a Dockerfile, a unit-test verifier, source files, and task instructions. A single build step, with no teacher-based validation, keeps generation cheap to scale." />
+<figcaption aria-hidden="true">The TMax data pipeline. Each task is
+composed by hierarchically sampling across 9 structured axes, after
+which the generator instantiates a Dockerfile, a unit-test verifier,
+source files, and task instructions. A single build step, with no
+teacher-based validation, keeps generation cheap to scale.</figcaption>
+</figure>
+<h3 id="generation-pipeline">2.1 Generation pipeline</h3>
+<p>A task is composed by drawing one value from each of <strong>nine
+structured axes</strong>. We follow <a
+href="https://huggingface.co/nvidia">Nemotron-Terminal</a> to seed the
+first two axes<span
+class="sidenote-wrapper"><label for="sn-4" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-4" class="margin-toggle"/><span
+class="sidenote">Pi et al., “Nemotron-Terminal,” 2026. We seed our
+domain and skill axes from their taxonomy.<br />
+<br />
+</span></span> (domain and skills), and introduce six orthogonal axes
+targeting diversity and difficulty as shown in the figure above.</p>
+<p>Because each task is sampled across these axes, the sampler yields
+combinatorially many distinct task signatures, while still letting us
+calibrate each axis on its own. The sampling is hierarchical because a
+few axes, such as personas and skills, are conditioned on the sampled
+domain to keep combination compatible. We <em>intentionally make three
+design choices</em> for the synthetic terminal data generation.</p>
+<p><strong>Scalability via soft filtering.</strong> Prior pipelines
+validate every task by having a strong model attempt it for multiple
+rollouts, which is expensive. We skip that step entirely. Our RL
+training already does <em>soft</em> filtering for free: it drops any
+task where all rollouts get the same reward, since those contribute no
+gradient. In practice the all-zero rate on our data is low (fewer than 8
+samples filtered per batch). All we need to guarantee at inference time
+is that the environment successfully <em>builds</em>, which we do with
+one Docker image per task (sharing a pre-built base image per domain).
+Turning two build steps into one allows synthetic environments to scale
+cheaply.</p>
+<p><strong>Diversity via hierarchical sampling.</strong> The
+hierarchical sampler is itself the main diversity mechanism, and we add
+two more. First, we condition generation on domain-specific
+<strong>personas</strong><span
+class="sidenote-wrapper"><label for="sn-5" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-5" class="margin-toggle"/><span
+class="sidenote">Persona-conditioned synthesis follows a line of prior
+data work, e.g. Ge et al., “Scaling Synthetic Data Creation with
+Personas,” 2025.<br />
+<br />
+</span></span> (6–18 per domain), so that a “red-team operator crafting
+an evasion payload” naturally shapes a plausible security task. Second,
+we incorporate <strong>multi-modal fixtures</strong> as part of task
+files: PNG, audio file, video, stripped binary, vendored package, etc.
+The policy itself stays a text-only model. It inspects and interacts
+these artifacts through ordinary terminal tooling (OCR, audio
+transcription, <code>ffmpeg</code>).</p>
+<p><strong>Difficulty via explicit calibration.</strong> To avoid the
+usual bimodal “trivial or impossible” task split, we calibrate
+difficulty along two new complexity axes (<em>task complexity</em>, from
+a handful of commands to intricate 30–60-command workflows, and
+<em>command complexity</em>, from bash-only to bash + code + system
+services) and sample uniformly across buckets. We also go beyond exact
+string-equality checks with <strong>graded verifiers</strong>: metric
+thresholds (e.g. accuracy ≥ 0.95), adversarial corpora (accept clean,
+reject malicious), fuzz equivalence against an oracle, or multi-protocol
+service checks. Thresholds give a continuous signal for terminal agents
+to hillclimb, while also increasing turn length.</p>
+<p>We release the full set of RL environments as <a
+href="https://huggingface.co/datasets/allenai/tmax-15k"
+class="dataset-tag">TMax-15K</a>.</p>
+<h3 id="comparing-terminal-datasets">2.2 Comparing terminal
+datasets</h3>
+<p>We annotated our data and six prior datasets with <a
+href="https://deepmind.google/technologies/gemini/">Gemini-3-Pro</a> and
+measured difficulty with <a
+href="https://deepmind.google/technologies/gemini/">Gemini-3-Flash</a>
+(250-task subsample per dataset, 8 rollouts each).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dataset</th>
+<th>Size</th>
+<th>Pass@1</th>
+<th>Pass@8</th>
+<th>Domain balance</th>
+<th>Skill balance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>TMax-15k (ours)</strong></td>
+<td><strong>15k</strong></td>
+<td><strong>42%</strong></td>
+<td><strong>53%</strong></td>
+<td><strong>0.998</strong></td>
+<td><strong>0.732</strong></td>
+</tr>
+<tr class="even">
+<td>Endless Terminals</td>
+<td>2.4k</td>
+<td>92%</td>
+<td>95%</td>
+<td>0.481</td>
+<td>0.284</td>
+</tr>
+<tr class="odd">
+<td>Open Thoughts Agents</td>
+<td>0.7k</td>
+<td>51%</td>
+<td>60%</td>
+<td>0.292</td>
+<td>0.153</td>
+</tr>
+<tr class="even">
+<td>TermiGen</td>
+<td>3k</td>
+<td>57%</td>
+<td>66%</td>
+<td>0.646</td>
+<td>0.477</td>
+</tr>
+<tr class="odd">
+<td>TerminalTraj</td>
+<td>5.5k</td>
+<td>54%</td>
+<td>65%</td>
+<td>0.363</td>
+<td>0.374</td>
+</tr>
+<tr class="even">
+<td>CLI-Gym</td>
+<td>1.5k</td>
+<td>41%</td>
+<td>55%</td>
+<td>0.283</td>
+<td>0.061</td>
+</tr>
+<tr class="odd">
+<td>SWE-smith</td>
+<td>59k</td>
+<td>54%</td>
+<td>72%</td>
+<td>0.146</td>
+<td>0.042</td>
+</tr>
+</tbody>
+</table>
+<p><em>Difficulty and balance statistics (Gemini-3-Flash, pass@k as mean
+over tasks). Balance is a “fraction-of-uniform” diversity score in [0,
+1].</em></p>
+<p>Two things worth to note. First, <strong>balance</strong>. Prior
+datasets pile 34–95% of their mass onto a single domain (software
+engineering alone is 95% of SWE-smith), while ours spreads roughly
+uniformly across all nine. That gives us the highest domain balance
+(0.998) and skill-type balance (0.732) of any dataset.</p>
+<figure>
+<img src="/assets/img/tmax/data-composition.png"
+alt="Domain distribution across datasets. Prior datasets skew heavily toward one or two domains; our compositional sampler yields balanced coverage across all nine." />
+<figcaption aria-hidden="true">Domain distribution across datasets.
+Prior datasets skew heavily toward one or two domains; our compositional
+sampler yields balanced coverage across all nine.</figcaption>
+</figure>
+<p>Second, <strong>difficulty</strong>. Our data is among the hardest of
+the bunch. Pass@1 is 42% (vs. 41–92% for prior datasets), and it has the
+<strong>lowest pass@8</strong> (53%). The difficulty gap persists even
+as we draw more rollouts, so the tasks are genuinely hard rather than
+just high-variance. We also checked for contamination with a 13-gram
+sliding window against the Terminal Bench tasks and found <strong>0%
+overlap</strong>.</p>
+<h3 id="sft-data-and-a-simple-harness">2.3 SFT data and a simple
+harness</h3>
+<p>A light SFT warm-up can help stability and performance before
+RL,<span
+class="sidenote-wrapper"><label for="sn-6" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-6" class="margin-toggle"/><span
+class="sidenote">Shown e.g. in DeepSeek-R1 and Olmo 3.<br />
+<br />
+</span></span> so for our weaker-model experiments on the older <a
+href="https://huggingface.co/Qwen">Qwen3-8B</a>, we also generate a
+small SFT dataset. Reusing the same pipeline, we make 2.2k more
+environments and sample 8 trajectories each from <a
+href="https://huggingface.co/Qwen">Qwen3.6-27B</a>, for 16.5K
+trajectories (8K of them successful). We use this SFT data only for the
+Qwen3-8B runs, and release it as <a
+href="https://huggingface.co/datasets/allenai/tmax-sft-16.5k"
+class="dataset-tag">TMax-SFT-16.5K</a>.</p>
+<p>Both data generation and RL rollouts run through a simple harness
+based on <a
+href="https://github.com/SWE-agent/mini-swe-agent">mini-swe-agent</a>
+with a persistent shell. We found the default Terminus-2 harness more
+brittle with small models, since it expects the agent to send raw
+keystrokes.</p>
+<h2 id="training-tmax-with-rl">3. Training TMax with RL</h2>
+<p>With the data in hand, the question is whether a <em>simple</em>
+recipe can turn it into a strong agent. We deliberately keep the
+algorithm plain. The goal is a clean, reproducible testbed with obvious
+room for future algorithmic improvement.</p>
+<h3 id="training-recipe">3.1 Training recipe</h3>
+<p>We train with a variant of <strong>GRPO</strong><span
+class="sidenote-wrapper"><label for="sn-7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-7" class="margin-toggle"/><span
+class="sidenote">Shao et al., “DeepSeekMath,” 2024.<br />
+<br />
+</span></span>, outcome-only with no learned reward model, plus a
+handful of changes for stability in the long-horizon agentic
+setting:</p>
+<ul>
+<li><strong>DPPO</strong> instead of vanilla GRPO.<span
+class="sidenote-wrapper"><label for="sn-8" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-8" class="margin-toggle"/><span
+class="sidenote">Qi et al., “Rethinking the Trust Region for LLM RL”
+(DPPO), 2026.<br />
+<br />
+</span></span> DPPO masks tokens where the inference (vLLM) and training
+logprobs disagree, using a binary approximation of the total-variation
+divergence. This small change meaningfully tames training collapse.</li>
+<li>A <strong>token-level loss</strong>,<span
+class="sidenote-wrapper"><label for="sn-9" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-9" class="margin-toggle"/><span
+class="sidenote">Token-level loss as in Yu et al., “DAPO,” 2025.<br />
+<br />
+</span></span> fully <strong>asynchronous</strong> training, filtering
+of zero-standard-deviation groups, and active sampling to keep batches
+full.<span
+class="sidenote-wrapper"><label for="sn-10" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-10" class="margin-toggle"/><span
+class="sidenote">Following Olmo 3.<br />
+<br />
+</span></span></li>
+<li>An <strong>FP32 LM head</strong>, keeping the language-model head in
+full precision to minimize the train/inference mismatch. This mattered
+most for the hybrid Qwen3.5 models.</li>
+</ul>
+<p>Infrastructure-wise, we extend <a
+href="https://github.com/allenai/open-instruct">open-instruct</a>, use
+<a href="https://github.com/vllm-project/vllm">vLLM</a> for rollouts,
+and run sandboxes via <a href="https://podman.io/">Podman</a> or
+Apptainer. A typical run uses 2 nodes for training and 6 for inference
+on H100s, and takes 2–3 days. The key hyperparameters are:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Hyperparameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Training steps</td>
+<td>500</td>
+</tr>
+<tr class="even">
+<td>Group size</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td>Prompts per batch</td>
+<td>8</td>
+</tr>
+<tr class="even">
+<td>Max context length</td>
+<td>65,536 tokens</td>
+</tr>
+<tr class="odd">
+<td>Max tool calls per episode</td>
+<td>64</td>
+</tr>
+</tbody>
+</table>
+<p>We keep thinking on intermediate turns (“interleaved thinking”), and
+evaluate on Terminal Bench 2.1 and <a
+href="https://www.tbench.ai/">Terminal Bench Lite</a>, averaging over 3
+runs.</p>
+<h3 id="tmax-15k-outperforms-other-terminal-data">3.2 TMax-15K
+outperforms other terminal data</h3>
+<p>We first hold the model fixed (<a
+href="https://huggingface.co/Qwen">Qwen3.5-9B</a>) and vary only the RL
+dataset. Training on <strong>TMax-15k gives the strongest Terminal Bench
+performance of any dataset we tried</strong>. We release the resulting
+model as <a href="https://huggingface.co/allenai/tmax-9b"
+class="dataset-tag">TMax-9B</a>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>RL dataset</th>
+<th>TB Lite</th>
+<th>TB 2.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>None (Qwen3.5-9B)</td>
+<td>41.9</td>
+<td>16.1</td>
+</tr>
+<tr class="even">
+<td>TermiGen</td>
+<td>49.4</td>
+<td>25.1</td>
+</tr>
+<tr class="odd">
+<td>Endless Terminals</td>
+<td>52.6</td>
+<td>25.5</td>
+</tr>
+<tr class="even">
+<td>OpenThinker-Agent</td>
+<td>53.0</td>
+<td>25.1</td>
+</tr>
+<tr class="odd">
+<td>TerminalTraj</td>
+<td>45.8</td>
+<td>18.0</td>
+</tr>
+<tr class="even">
+<td>CLI-Gym</td>
+<td>50.7</td>
+<td>25.1</td>
+</tr>
+<tr class="odd">
+<td>SWE-Smith</td>
+<td>47.2</td>
+<td>21.0</td>
+</tr>
+<tr class="even">
+<td><strong>TMax-15k (ours)</strong></td>
+<td><strong>57.2</strong></td>
+<td><strong>28.8</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>RL on Qwen3.5-9B across datasets; mean over 3 runs. Our data
+improve Terminal Bench 2.1 by nearly 13 points over the base
+model.</em></p>
+<p>We find that TMax-15K stays difficult throughout training. If we plot
+the average number of steps the model takes during training,
+<strong>TMax-15k consistently drives more steps per episode</strong>
+than other datasets. The tasks keep demanding real, multi-step work
+rather than being solved in a couple of commands.</p>
+<figure>
+<img src="/assets/img/tmax/step-count.png"
+alt="Average steps per episode over training (15-step smoothing). Training on TMax-15k sustains higher step counts than other datasets, indicating the tasks stay difficult throughout." />
+<figcaption aria-hidden="true">Average steps per episode over training
+(15-step smoothing). Training on TMax-15k sustains higher step counts
+than other datasets, indicating the tasks stay difficult
+throughout.</figcaption>
+</figure>
+<p>We also see the model <em>learn to think more</em> over the course of
+training: the number of tokens it spends per assistant turn, for both
+reasoning and tool-calling, climbs steadily. This is the agentic
+analogue of inference-time reasoning scaling, and it tracks the model’s
+improving performance.</p>
+<figure>
+<img src="/assets/img/tmax/turn-tokens.png" class="fig-small"
+alt="Average assistant-turn and tool-call length (tokens) over training. Per-turn output grows, suggesting the model learns to make better use of inference-time compute." />
+<figcaption aria-hidden="true">Average assistant-turn and tool-call
+length (tokens) over training. Per-turn output grows, suggesting the
+model learns to make better use of inference-time compute.</figcaption>
+</figure>
+<h3 id="tmax-9b-outperforms-prior-small-terminal-agents">3.3 TMax-9B
+outperforms prior small terminal agents</h3>
+<p>At <strong>27.2%</strong> on Terminal Bench 2.0, TMax-9B is the best
+open-weights model under 10B we compare against under official Terminal
+Bench settings,<span
+class="sidenote-wrapper"><label for="sn-11" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-11" class="margin-toggle"/><span
+class="sidenote">Terminal Bench scores can be sensitive to harness and
+timeout settings. With non-standard settings (for example, overriding
+the default timeouts) the base Qwen3.5-9B can score noticeably higher,
+so we report all numbers under official Terminal Bench settings for a
+fair comparison.<br />
+<br />
+</span></span> beating 32B terminal agents from several prior works and
+approaching closed offerings like Claude Haiku 4.5 (29.8%).</p>
+<p>The same recipe scales across the whole Qwen3.5 family. TMax-2B and
+TMax-4B reach 2.9% and 18.9% (from 2.3% and 16.6%), and <a
+href="https://huggingface.co/allenai/tmax-27b"
+class="dataset-tag">TMax-27B</a> (built on Qwen3.6-27B) reaches
+<strong>42.7%</strong> (from 39.6%). At that size, TMax-27B approaches
+models that are a few order of magnitude larger, like the 1T-parameter
+Kimi K2.5 (43.2%) and the 230B MiniMax M2.7 (45.1%).</p>
+<h3 id="generalization-across-tasks-harnesses-and-models">3.4
+Generalization across tasks, harnesses, and models</h3>
+<p>Finally, we show our training and data recipe generalizes well across
+three important axes: tasks (i.e., what it is asked to do), harnesses
+(i.e., what tools and prompts it is provided when performing tasks), and
+model families (i.e., the starting point model).</p>
+<p><strong>Across tasks.</strong> Evaluating TMax-9B beyond Terminal
+Bench, performance improves across the board, including on a non-agentic
+math benchmark:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Benchmark</th>
+<th>Qwen3.5-9B</th>
+<th>TMax-9B</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SWE-Bench Verified</td>
+<td>44.0</td>
+<td><strong>53.5</strong></td>
+</tr>
+<tr class="even">
+<td>AIME’24/25 (terminal-agent)</td>
+<td>73.3</td>
+<td><strong>91.1</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Generalization to other tasks; mean over 3 runs. RL on terminal
+data improves an agentic SWE benchmark by ~9 points and math by
+~18.</em></p>
+<p><strong>Across harnesses.</strong> When we swap out the harness for
+different prompts and tools than the one used during RL, TMax-9B
+improves by <strong>roughly 9 to 15 points in every harness we
+tried</strong>, even ones it never saw in training.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Harness</th>
+<th>Qwen3.5-9B</th>
+<th>TMax-9B</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ours (mini-swe-agent + persistent shell)</td>
+<td>41.9</td>
+<td><strong>57.2</strong></td>
+</tr>
+<tr class="even">
+<td>OpenHands</td>
+<td>36.0</td>
+<td><strong>46.9</strong></td>
+</tr>
+<tr class="odd">
+<td>mini-swe-agent</td>
+<td>44.1</td>
+<td><strong>55.3</strong></td>
+</tr>
+<tr class="even">
+<td>Terminus-2</td>
+<td>36.4</td>
+<td><strong>45.3</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Terminal Bench Lite across evaluation harnesses; mean over 3
+runs.</em></p>
+<p><strong>Across models.</strong> We also apply it to the older <a
+href="https://huggingface.co/Qwen/Qwen3-8B">Qwen3-8B</a>, with a short
+SFT warm-start and shorter context. It improves substantially on
+Terminal Bench Lite (7.3 → 17.7), though gains on the harder Terminal
+Bench 2.1 are smaller, since at this scale the benchmark’s difficulty
+makes improvements hard to see.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>TB Lite</th>
+<th>TB 2.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Qwen3-8B</td>
+<td>7.3</td>
+<td>1.1</td>
+</tr>
+<tr class="even">
+<td>  + SFT</td>
+<td>11.5</td>
+<td><strong>6.0</strong></td>
+</tr>
+<tr class="odd">
+<td>  + RL</td>
+<td><strong>17.7</strong></td>
+<td>5.2</td>
+</tr>
+</tbody>
+</table>
+<p><em>Qwen3-8B on Terminal Bench Lite and 2.1 after SFT and then RL;
+mean over 3 runs.</em></p>
+<p>Taken together, these results strongly suggest that TMax RL training
+teaches the model <strong>new, transferable terminal skills</strong>,
+not mere harness-fitting or overfitting to Terminal Bench-style
+tasks.</p>
+<h2 id="analysis-discussion">4. Analysis &amp; discussion</h2>
+<p>Two findings shaped the TMax recipe, and we think both are useful for
+the community training terminal agent in this setting.</p>
+<h3 id="strong-models-dont-always-want-your-sft-data">4.1 Strong models
+don’t always want your SFT data</h3>
+<p>Common post-training pipelines advise warm-start RL with SFT for
+training stability. However, we find that existing datasets degrades
+Qwen 3.5’s performance, likedy due to the model undergoing heavy
+post-training already. This holds even for our own mixture, which we
+generated from a strong Qwen3.6-27B teacher. The older Qwen3-8B, by
+contrast, clearly <em>benefits</em> from the same SFT.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>TB Lite</th>
+<th>TB 2.1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Qwen3.5-9B</td>
+<td><strong>41.9</strong></td>
+<td>16.1</td>
+</tr>
+<tr class="even">
+<td>  + TMax SFT</td>
+<td>35.5</td>
+<td>15.0</td>
+</tr>
+<tr class="odd">
+<td>  + large SFT</td>
+<td>31.3</td>
+<td>16.9</td>
+</tr>
+<tr class="even">
+<td>Qwen3-8B</td>
+<td>7.3</td>
+<td>1.1</td>
+</tr>
+<tr class="odd">
+<td>  + TMax SFT</td>
+<td>11.5</td>
+<td>6.0</td>
+</tr>
+<tr class="even">
+<td>  + large SFT</td>
+<td><strong>16.4</strong></td>
+<td><strong>7.9</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>SFT before RL helps the older model but hurts the stronger
+one.</em></p>
+<p>We suspect the larger mixtures lean on relatively weak teacher models
+from prior work, and that a heavily post-trained model has less to gain
+and more to lose from imitation. We leave further exploration of good
+SFT mixtures for Qwen 3.5 as future work.</p>
+<h3 id="terminal-agent-rl-is-hard-to-stabilize">4.2 Terminal-agent RL is
+hard to stabilize</h3>
+<p>We found training was frequently unstable and often collapsed past
+200–300 steps. The main culprit is numeric mismatch between training and
+inference, which the hybrid Qwen3.5 architecture makes worse. Keeping
+the LM head in FP32 removes the worst logprob spikes (below), and moving
+from GRPO to DPPO, together with a larger group size, further limits
+collapse. Long horizons (often 20+ steps) and infrastructure load from
+running many sandboxes make things harder still. We give the full
+analysis, including the GRPO-vs-DPPO and group-size comparisons, in the
+paper.</p>
+<figure>
+<img src="/assets/img/tmax/fp32-lm-head.png" class="fig-small"
+alt="Maximum inference-vs-trainer logprob difference over the first 100 steps for Qwen3.5-9B. The FP32 LM head removes the large spikes (Qwen3-8B does not show them even without it)." />
+<figcaption aria-hidden="true">Maximum inference-vs-trainer logprob
+difference over the first 100 steps for Qwen3.5-9B. The FP32 LM head
+removes the large spikes (Qwen3-8B does not show them even without
+it).</figcaption>
+</figure>
+<p>We saw the same instabilities on Qwen3-8B, so this is not a quirk of
+one model family. We believe more stable, longer training would yield
+substantially better models.</p>
+<h2 id="conclusion">5. Conclusion</h2>
+<p>TMax is a simple recipe for training strong terminal agents at small
+scale. Its two pieces are <strong>TMax-15k</strong>, a difficulty- and
+diversity-controlled dataset of 14,600 RL environments, and a plain DPPO
+training recipe. Together they are enough to train
+<strong>TMax-9B</strong> and <strong>TMax-27B</strong>, which is among
+the strongest open-weights models under 10B and 30B at the time of
+writing, respectively. The gains transfer to SWE-Bench, to AIME, and
+across harnesses, which is evidence that the model has genuinely
+improved at using a terminal rather than memorizing one setup. We
+release the data, models, and code as a starting point for others.</p>
+<p><strong>Where we’d go next.</strong> Follow from our results, three
+directions naturally falls out. Better training stability, more complex
+harnesses, and more complex data.</p>
+<p>We hope TMax serves as a strong baseline and a useful testbed for the
+community to improve the stability, performance, and efficiency of
+terminal agents.</p>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>TMax is a collaboration between the University of Washington and the
+Allen Institute for AI (Ai2). We thank members of UW NLP and the Open
+Ecosystem team at Ai2 for feedback and discussion throughout this
+project, Michael Noukhovitch for useful discussions on RL stability, and
+the Ai2 Beaker team for help with infrastructure.</p>
+<h2 id="citation">Citation</h2>
+<p>[TODO]</p>
+<div class="citation">
+<p>Please cite this work as:</p>
+<pre><code>Ivison, Hamish and Yin, Junjie Oscar and Shao, Rulin and Xiao, Teng and
+Lambert, Nathan and Hajishirzi, Hannaneh, &quot;TMax: A Simple Recipe for Terminal
+Agents&quot;, arXiv preprint arXiv:XXXX.XXXXX, 2026.</code></pre>
+<p>Or use the BibTeX citation:</p>
+<pre><code>@article{ivison2026tmax,
+  author  = {Ivison, Hamish and Yin, Junjie Oscar and Shao, Rulin and Xiao, Teng and Lambert, Nathan and Hajishirzi, Hannaneh},
+  title   = {TMax: A Simple Recipe for Terminal Agents},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026},
+}</code></pre>
+</div>
+
+  <p class="signoff"><a href="/blog/">&larr; All posts</a></p>
+</main>
+
+<script>
+  (function () {
+    var article = document.querySelector('main');
+    var toc = document.getElementById('TOC');
+    if (!article || !toc) return;
+    var headings = article.querySelectorAll('h2, h3');
+    if (!headings.length) { toc.style.display = 'none'; return; }
+
+    var list = document.createElement('ul');
+    var currentTop = null;
+    var currentSub = null;
+
+    headings.forEach(function (h) {
+      if (!h.id) {
+        h.id = h.textContent.trim().toLowerCase().replace(/[^\w]+/g, '-');
+      }
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      li.appendChild(a);
+
+      if (h.tagName === 'H2') {
+        list.appendChild(li);
+        currentTop = li;
+        currentSub = null;
+      } else {
+        if (!currentSub) {
+          currentSub = document.createElement('ul');
+          (currentTop || list).appendChild(currentSub);
+        }
+        currentSub.appendChild(li);
+      }
+    });
+
+    toc.appendChild(list);
+  })();
+</script>
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>WAI &middot; University of Washington</span>
+    <span>&copy; 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>
