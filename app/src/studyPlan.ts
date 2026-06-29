@@ -7,6 +7,7 @@ export type StudyResource = {
   source?: string
   url?: string
   embedUrl?: string
+  context?: string
   optional?: boolean
 }
 
@@ -69,26 +70,16 @@ const video = (
   title: string,
   url: string,
   embedUrl?: string,
+  optional = false,
+  context?: string,
 ): StudyResource => ({
   id,
   kind: 'video',
   title,
   url,
   embedUrl,
-})
-
-const site = (id: string, title: string, url: string): StudyResource => ({
-  id,
-  kind: 'site',
-  title,
-  url,
-})
-
-const dataset = (id: string, title: string, url: string): StudyResource => ({
-  id,
-  kind: 'dataset',
-  title,
-  url,
+  optional,
+  context,
 })
 
 export const phases: Phase[] = [
@@ -137,6 +128,22 @@ export const phases: Phase[] = [
       paper('papers/01-llm-foundations/scaling-laws-for-neural-language-models-2001.08361.pdf', 'Scaling Laws for Neural Language Models'),
       paper('papers/01-llm-foundations/language-models-are-few-shot-learners-2005.14165.pdf', 'Language Models are Few-Shot Learners'),
       paper('papers/01-llm-foundations/training-compute-optimal-large-language-models-2203.15556.pdf', 'Training Compute-Optimal Large Language Models'),
+      video(
+        'video-karpathy-zero-to-hero',
+        'Karpathy Zero to Hero',
+        'https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ',
+        'https://www.youtube.com/embed/videoseries?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ',
+        true,
+        'Phase 1 support: build neural nets and GPT from first principles.',
+      ),
+      video(
+        'video-karpathy-gpt',
+        'Karpathy GPT video',
+        'https://www.youtube.com/watch?v=kCc8FmEb1nY',
+        'https://www.youtube.com/embed/kCc8FmEb1nY',
+        true,
+        'Phase 1 support: watch a tiny GPT implementation end to end.',
+      ),
     ],
     inspect: [
       { id: 'p1-run-nanogpt-shakespeare', label: 'Run the smallest Shakespeare path in nanoGPT.' },
@@ -159,6 +166,14 @@ export const phases: Phase[] = [
       paper('papers/01-llm-foundations/deepseek-v3-technical-report-2412.19437.pdf', 'DeepSeek-V3 Technical Report'),
       paper('papers/01-llm-foundations/gemini-1-5-unlocking-multimodal-understanding-across-millions-of-tokens-of-context-2403.05530.pdf', 'Gemini 1.5 Technical Report'),
       paper('papers/01-llm-foundations/mixtral-of-experts-2401.04088.pdf', 'Mixtral of Experts'),
+      video(
+        'video-stanford-building-llms',
+        'Stanford Building LLMs',
+        'https://www.youtube.com/watch?v=9vM4p9NN0Ts',
+        'https://www.youtube.com/embed/9vM4p9NN0Ts',
+        true,
+        'Phase 2 support: connect model recipe papers to real build choices.',
+      ),
     ],
     inspect: [
       { id: 'p2-inspect-speedrun', label: 'Inspect repos/karpathy__nanochat/runs/speedrun.sh.' },
@@ -286,6 +301,14 @@ export const phases: Phase[] = [
       paper('papers/03-reasoning-and-agents/swe-agent-agent-computer-interfaces-enable-automated-software-engineering-2405.15793.pdf', 'SWE-agent'),
       paper('papers/03-reasoning-and-agents/openhands-an-open-platform-for-ai-software-developers-as-generalist-agents-2407.16741.pdf', 'OpenHands'),
       paper('papers/04-evaluation/swe-bench-can-language-models-resolve-real-world-github-issues-2310.06770.pdf', 'SWE-bench'),
+      video(
+        'video-noam-brown-planning',
+        'Noam Brown on planning in AI',
+        'https://www.youtube.com/watch?v=eaAonE58sLU',
+        'https://www.youtube.com/embed/eaAonE58sLU',
+        true,
+        'Phase 7 support: understand planning and search before agent benchmarks.',
+      ),
     ],
     inspect: [
       { id: 'p7-inspect-mini-swe-agent', label: 'Inspect repos/SWE-agent__mini-swe-agent.' },
@@ -430,50 +453,6 @@ export const phases: Phase[] = [
       label: 'Write notes/12-contribution.md with hypothesis, setup, commands, results, failure modes, and next experiment.',
     },
   },
-]
-
-export const referenceResources: StudyResource[] = [
-  video(
-    'video-karpathy-zero-to-hero',
-    'Karpathy Zero to Hero',
-    'https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ',
-    'https://www.youtube.com/embed/videoseries?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ',
-  ),
-  video(
-    'video-karpathy-gpt',
-    'Karpathy GPT video',
-    'https://www.youtube.com/watch?v=kCc8FmEb1nY',
-    'https://www.youtube.com/embed/kCc8FmEb1nY',
-  ),
-  video(
-    'video-noam-brown-planning',
-    'Noam Brown on planning in AI',
-    'https://www.youtube.com/watch?v=eaAonE58sLU',
-    'https://www.youtube.com/embed/eaAonE58sLU',
-  ),
-  video(
-    'video-stanford-building-llms',
-    'Stanford Building LLMs',
-    'https://www.youtube.com/watch?v=9vM4p9NN0Ts',
-    'https://www.youtube.com/embed/9vM4p9NN0Ts',
-  ),
-  site('site-yannic-kilcher', 'Yannic Kilcher paper explanations', 'https://www.youtube.com/@YannicKilcher'),
-  site('site-fsdl', 'Full Stack Deep Learning', 'https://fullstackdeeplearning.com/'),
-  site('site-prompting-guide', 'Prompting Guide', 'https://www.promptingguide.ai/'),
-  site('site-ai-canon', 'a16z AI Canon', 'https://a16z.com/ai-canon/'),
-  site('site-latent-space-2025', 'Latent Space 2025 AI Engineer reading list', 'https://www.latent.space/p/2025-papers'),
-  site('site-state-generative-models-2024', 'State of Generative Models 2024', 'https://nrehiew.github.io/blog/2024/'),
-  site('site-owasp-llm', 'OWASP Top 10 for LLM Applications', 'https://owasp.org/www-project-top-10-for-large-language-model-applications/'),
-  site('site-docker-rootless', 'Docker rootless mode', 'https://docs.docker.com/engine/security/rootless/'),
-  site('site-docker-seccomp', 'Docker seccomp profiles', 'https://docs.docker.com/engine/security/seccomp/'),
-  site('site-docker-privilege', 'Docker runtime privilege and capabilities', 'https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities'),
-  paper('papers/03-reasoning-and-agents/tmax-a-simple-recipe-for-terminal-agents-2606.23321.pdf', 'TMax paper'),
-  site('site-tmax-blog', 'TMax blog', 'https://wai-org.com/blog/tmax/'),
-  repo('repos/hamishivi__tmax/README.md', 'TMax code', 'https://github.com/hamishivi/tmax'),
-  dataset('dataset-tmax-hf-collection', 'TMax Hugging Face collection', 'https://huggingface.co/collections/allenai/tmax'),
-  dataset('dataset-tmax-15k', 'TMax-15K dataset', 'https://huggingface.co/datasets/allenai/TMax-15K'),
-  site('site-terminal-bench-leaderboard', 'Terminal Bench leaderboard', 'https://www.tbench.ai/leaderboard/terminal-bench/2.0'),
-  site('site-terminal-bench', 'Terminal Bench site', 'https://www.tbench.ai/'),
 ]
 
 export const compressionPaths = [

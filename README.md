@@ -2,7 +2,7 @@
 
 A structured AI fundamentals curriculum and study tracker for learning modern LLM systems, post-training, agents, evaluation, and terminal-agent reinforcement learning.
 
-This repo is not a library or benchmark package. It is a working learning resource: a phased study plan, a curated paper map, local source snapshots, experiment ladders, TMax-focused datasets, and a browser app for tracking progress in short free-time study sessions.
+This repo is not a library or benchmark package. It is a working learning resource: a phased study plan, a curated paper map, local source snapshots, experiment ladders, TMax-focused datasets, and a browser app for tracking phase progress and source completion.
 
 Web app: https://sanjuruk.com/ai-fundamentals
 
@@ -61,7 +61,7 @@ Read the full plan in [STUDY_PLAN.md](STUDY_PLAN.md). That file has required pap
 | Path | Purpose |
 | --- | --- |
 | [STUDY_PLAN.md](STUDY_PLAN.md) | The phased curriculum and source of truth for what to study next. |
-| [app](app/) | Bun/Vite/React study tracker with milestones, quests, streaks, local progress, dark mode, and online links. |
+| [app](app/) | Bun/Vite/React study tracker with phase milestones, local progress, dark mode, and online links. |
 | [papers](papers/) | Local PDF library grouped by topic. The PDFs are ignored by git; [papers/README.md](papers/README.md) is the committed index. |
 | [resources](resources/) | Videos, source snapshots, TMax blog assets, Hugging Face metadata, and useful external links. |
 | [data](data/) | Local dataset notes. Large Parquet shards are ignored by git and should be downloaded intentionally. |
@@ -79,7 +79,7 @@ The repo currently indexes:
 - TMax and related dataset metadata, with local Parquet shards kept out of git.
 - 20 local source repos for inspection, including nanoGPT, nanochat, OpenRLHF, verl, TRL, open-instruct, terminal-bench, mini-swe-agent, reward-bench, vLLM, DCLM, and interpretability tooling.
 - TMax blog HTML, images, Hugging Face collection metadata, and source links.
-- A browser-based progress tracker for free-time study.
+- A browser-based progress tracker for phase work and online source access.
 
 Key external anchors:
 
@@ -158,7 +158,7 @@ Ignored:
 
 1. Pick the current phase in [STUDY_PLAN.md](STUDY_PLAN.md).
 2. Read only the required sources first.
-3. Use the tracker to log short sessions and mark source completion.
+3. Use the tracker to open sources, mark completion, and follow phase progress.
 4. Produce the phase exit artifact in [notes](notes/).
 5. Only then move to the next phase.
 

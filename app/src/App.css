@@ -6,6 +6,7 @@
 .app-header,
 .today-panel,
 .learning-path,
+.featured-workbench,
 .study-grid {
   max-width: 1480px;
   margin-inline: auto;
@@ -187,6 +188,11 @@
   padding: 8px;
 }
 
+.score-panel .reset-button {
+  min-height: 70px;
+  align-self: stretch;
+}
+
 #reward-anchor {
   position: absolute;
   top: 18px;
@@ -196,14 +202,10 @@
 }
 
 .today-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
-  gap: 14px;
   margin-bottom: 14px;
 }
 
 .next-card,
-.quest-card,
 .focus-panel,
 .resource-deck,
 .side-card {
@@ -219,6 +221,22 @@
   max-width: 760px;
   margin: 0;
   color: var(--muted);
+}
+
+.next-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.next-meta span {
+  padding: 6px 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--paper);
 }
 
 .section-heading {
@@ -237,91 +255,6 @@
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
-}
-
-.weekly-meter {
-  display: grid;
-  grid-template-columns: auto minmax(130px, 260px) auto;
-  gap: 10px;
-  align-items: center;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 12px;
-}
-
-.quest-card {
-  background: var(--quest-bg);
-  color: var(--quest-fg);
-}
-
-.quest-card .panel-title {
-  color: var(--quest-fg);
-}
-
-.quest-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.quest-row {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: start;
-  padding: 10px;
-  border: 1px solid var(--quest-row-border);
-  border-radius: 7px;
-  background: var(--quest-row-bg);
-}
-
-.quest-row[data-done='true'] {
-  border-color: rgba(46, 147, 102, 0.75);
-  background: rgba(46, 147, 102, 0.16);
-}
-
-.quest-status {
-  color: var(--amber);
-  display: grid;
-  place-items: center;
-  padding-top: 2px;
-}
-
-.quest-row[data-done='true'] .quest-status {
-  color: var(--green);
-}
-
-.quest-copy {
-  min-width: 0;
-}
-
-.quest-copy strong,
-.quest-copy small {
-  display: block;
-}
-
-.quest-copy strong {
-  color: var(--quest-fg);
-  font-size: 13px;
-}
-
-.quest-copy small {
-  margin-top: 2px;
-  color: var(--quest-muted);
-  font-size: 12px;
-  line-height: 1.25;
-}
-
-.quest-row .ui-progress {
-  margin-top: 8px;
-  background: var(--quest-progress-bg);
-}
-
-.quest-count {
-  color: var(--quest-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  white-space: nowrap;
 }
 
 .learning-path {
@@ -441,6 +374,11 @@
   min-width: 0;
   display: grid;
   gap: 14px;
+}
+
+.featured-workbench,
+.phase-detail-anchor {
+  scroll-margin-top: 20px;
 }
 
 button:focus-visible,
@@ -605,98 +543,6 @@ summary:focus-visible {
   top: 16px;
 }
 
-.league-card p {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.league-badge {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 12px;
-  border: 2px solid var(--green);
-  border-radius: 7px;
-  background: var(--paper);
-}
-
-.league-badge span {
-  font-family: var(--display);
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.league-badge strong,
-.session-history small,
-.quest-count {
-  font-family: var(--mono);
-}
-
-.league-badge strong {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.league-card .ui-progress {
-  margin-top: 10px;
-}
-
-.session-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 12px 0;
-}
-
-.side-metrics {
-  display: grid;
-  gap: 8px;
-}
-
-.side-metrics > div {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  padding: 8px;
-  border-radius: 7px;
-  background: var(--paper);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.session-history {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0;
-}
-
-.session-history p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.session-history div {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.session-history span {
-  color: var(--ink);
-  font-weight: 800;
-}
-
-.session-history small {
-  color: var(--muted);
-}
-
 .reset-button {
   width: 100%;
 }
@@ -762,15 +608,24 @@ summary:focus-visible {
   font-size: 13px;
 }
 
+.featured-workbench {
+  margin-bottom: 14px;
+}
+
 .resource-workbench {
+  --viewer-height: clamp(760px, 78vh, 980px);
   display: grid;
-  grid-template-columns: minmax(340px, 0.82fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(300px, 410px) minmax(0, 1fr);
   gap: 14px;
 }
 
 .resource-deck,
 .viewer-panel {
-  min-height: 620px;
+  min-height: var(--viewer-height);
+}
+
+.resource-deck .section-heading h2 {
+  font-size: clamp(24px, 2.2vw, 34px);
 }
 
 .open-link,
@@ -853,42 +708,17 @@ summary:focus-visible {
   font-size: 12px;
 }
 
-.reference-shelf {
-  margin-top: 16px;
-}
-
-.reference-shelf summary {
-  color: var(--ink);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.reference-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.reference-chip {
-  max-width: 100%;
-  min-height: 34px;
-  display: inline-flex;
-  gap: 7px;
-  align-items: center;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
+.resource-main em {
+  min-width: 0;
+  display: -webkit-box;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--muted);
   font-size: 12px;
-  cursor: pointer;
-}
-
-.reference-chip[data-active='true'] {
-  background: var(--primary);
-  color: var(--primary-fg);
+  font-style: normal;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .viewer-panel {
@@ -938,14 +768,14 @@ summary:focus-visible {
 .viewer-frame {
   width: 100%;
   height: 100%;
-  min-height: 570px;
+  min-height: calc(var(--viewer-height) - 49px);
   display: block;
   border: 0;
   background: white;
 }
 
 .viewer-empty {
-  min-height: 570px;
+  min-height: calc(var(--viewer-height) - 49px);
   display: grid;
   place-items: center;
   align-content: center;
@@ -969,7 +799,6 @@ summary:focus-visible {
 
 @media (max-width: 1180px) {
   .app-header,
-  .today-panel,
   .study-grid,
   .resource-workbench,
   .learning-path {
@@ -992,8 +821,7 @@ summary:focus-visible {
 
   .ui-button,
   .open-link,
-  .viewer-empty a,
-  .reference-chip {
+  .viewer-empty a {
     min-height: 44px;
   }
 
@@ -1005,7 +833,6 @@ summary:focus-visible {
     min-height: 44px;
   }
 
-  .reference-shelf summary,
   .compression-card summary {
     min-height: 44px;
     display: flex;
@@ -1040,11 +867,6 @@ summary:focus-visible {
     align-items: stretch;
   }
 
-  .weekly-meter {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
   .path-title h2 {
     font-size: 26px;
   }
@@ -1066,15 +888,6 @@ summary:focus-visible {
     width: 100%;
     height: auto;
     max-height: 170px;
-  }
-
-  .quest-row {
-    grid-template-columns: 22px minmax(0, 1fr);
-    min-height: 74px;
-  }
-
-  .quest-count {
-    grid-column: 2;
   }
 
   .side-stack {
