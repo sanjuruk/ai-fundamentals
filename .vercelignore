@@ -1,9 +1,21 @@
-# Vercel only needs the standalone Vite app.
-# The repo also contains local PDFs, datasets, source clones, and scratch state.
-*
-!app/
-!app/**
-
+# Keep the deploy archive small. The Vercel project root is app/.
+repos/
+papers/
+data/
+models/
+resources/raw/
+_local/
+.local/
+.gstack/
+.codex/
+.claude/
+.vercel/
+.env*
+node_modules/
+dist/
+build/
+.vite/
+coverage/
 app/node_modules/
 app/dist/
 app/.env*
