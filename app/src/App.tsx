@@ -184,7 +184,6 @@ function App() {
   const exitArtifactsDone = exitArtifactIds.filter((id) => completedIds.has(id)).length
   const requiredDone = allRequired.filter((id) => completedIds.has(id)).length
   const overallPercent = allRequired.length === 0 ? 0 : Math.round((requiredDone / allRequired.length) * 100)
-  const nextPhase = phases.find((phase) => !phase.optional && (phaseStats.get(phase.id)?.percent ?? 0) < 100) ?? phases[12]
   const selectedResource =
     selectedPhase.resources.find((resource) => resource.id === selectedResourceId) ??
     selectedPhase.resources[0]
@@ -320,26 +319,12 @@ function App() {
         </Card>
       </header>
 
-      <section className="today-panel" aria-label="Next phase">
-        <Card className="next-card">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">next phase</p>
-              <h2>
-                Phase {nextPhase.number}: {nextPhase.title}
-              </h2>
-            </div>
-            <Button type="button" variant="outline" onClick={() => openPhaseWorkbench(nextPhase.id)}>
-              Open phase
-            </Button>
-          </div>
-          <p>{nextPhase.goal}</p>
-          <div className="next-meta">
-            <span>{nextPhase.time}</span>
-            <span>{phaseStats.get(nextPhase.id)?.percent ?? 0}% complete</span>
-          </div>
-        </Card>
-      </section>
+      <LearningPath
+        phases={phases}
+        phaseStats={phaseStats}
+        selectedPhaseId={selectedPhase.id}
+        onSelect={openPhaseWorkbench}
+      />
 
       <section className="resource-workbench featured-workbench" ref={workbenchRef} aria-label="Online workbench">
         <ResourceDeck
@@ -350,13 +335,6 @@ function App() {
         />
         <ResourceViewer resource={selectedResource} />
       </section>
-
-      <LearningPath
-        phases={phases}
-        phaseStats={phaseStats}
-        selectedPhaseId={selectedPhase.id}
-        onSelect={openPhaseWorkbench}
-      />
 
       <div className="study-grid">
         <div className="primary-stack">
