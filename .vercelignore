@@ -1,0 +1,12 @@
+# Vercel only needs the standalone Vite app.
+# The repo also contains local PDFs, datasets, source clones, and scratch state.
+*
+!app/
+!app/**
+
+app/node_modules/
+app/dist/
+app/.env*
+app/.vercel/
+app/public/ai-fundamentals-study-card.png
+app/public/phase-cards/
